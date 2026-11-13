@@ -100,7 +100,7 @@ class _DiagnosticsScreenState extends ConsumerState<DiagnosticsScreen> {
                       return 'state keys: ${ok.keys.length}';
                     }),
             icon: const Icon(Icons.refresh_outlined),
-            label: const Text('Verify silent token path (state call)'),
+            label: const Text('Re-call state (exercises token + role headers)'),
           ),
           if (_running)
             const Padding(
