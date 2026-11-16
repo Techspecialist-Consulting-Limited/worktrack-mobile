@@ -137,8 +137,9 @@ class AuthController extends Notifier<AuthState> {
         state = state.copyWith(
           phase: AuthPhase.signedOut,
           busy: false,
-          errorMessage:
-              'Your Microsoft account is not linked to a WorkTrack membership. Ask an administrator for access.',
+          errorMessage: session.accessState == 'deactivated'
+              ? 'Your WorkTrack account was deactivated. Ask an administrator to reactivate it.'
+              : 'Registration required — complete staff onboarding to continue.',
         );
         return;
       }

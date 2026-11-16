@@ -46,6 +46,35 @@ class SessionService {
     return body;
   }
 
+  /// POST /api/mobile/onboarding — self-service staff registration.
+  /// Same backend rules as web /onboarding; returns the new membership + state.
+  Future<Map<String, dynamic>> completeOnboarding({
+    required String workArrangement,
+    String? clientOrganisationId,
+    String? jobTitle,
+    String? department,
+  }) async {
+    final Response<Map<String, dynamic>> res;
+    try {
+      res = await _client.post<Map<String, dynamic>>(
+        '/api/mobile/onboarding',
+        data: {
+          'workArrangement': workArrangement,
+          'clientOrganisationId': ?clientOrganisationId,
+          'jobTitle': ?jobTitle,
+          'department': ?department,
+        },
+      );
+    } on DioException catch (e) {
+      throw _mapDio(e);
+    }
+    final body = res.data ?? const <String, dynamic>{};
+    if (body['ok'] != true) {
+      throw ApiException(body['message'] as String? ?? 'Registration failed.', res.statusCode);
+    }
+    return body;
+  }
+
   /// POST /api/mobile/invitations/redeem — prepared for the future
   /// invitation flow; not invoked by the current UI.
   Future<Map<String, dynamic>> redeemInvitation(

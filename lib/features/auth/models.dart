@@ -33,11 +33,20 @@ class MembershipInfo {
 }
 
 class SessionInfo {
-  const SessionInfo({required this.name, required this.email, required this.memberships});
+  const SessionInfo({
+    required this.name,
+    required this.email,
+    required this.memberships,
+    required this.accessState,
+  });
 
   final String? name;
   final String? email;
   final List<MembershipInfo> memberships;
+
+  /// Backend-reported lifecycle state: "active" | "deactivated" | "none".
+  /// "none" means the identity must complete self-service onboarding.
+  final String accessState;
 
   factory SessionInfo.fromJson(Map<String, dynamic> json) {
     final identity = json['identity'] as Map<String, dynamic>? ?? const {};
@@ -49,6 +58,7 @@ class SessionInfo {
           .whereType<Map>()
           .map((m) => MembershipInfo.fromJson(m.cast<String, dynamic>()))
           .toList(),
+      accessState: json['accessState'] as String? ?? 'none',
     );
   }
 }

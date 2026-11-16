@@ -4,8 +4,8 @@ import 'package:material_ui/material_ui.dart';
 /// consistent with its purple-accented professional identity.
 class AppColors {
   AppColors._();
-  static const Color primary = Color(0xFF6D28D9);
-  static const Color primaryDark = Color(0xFF5B21B6);
+  static const Color primary = Color(0xFF27AE60);
+  static const Color primaryDark = Color(0xFF1E8449);
   static const Color surface = Color(0xFFF7F6FC);
   static const Color card = Colors.white;
   static const Color textPrimary = Color(0xFF1F2430);
