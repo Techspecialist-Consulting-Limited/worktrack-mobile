@@ -1,8 +1,18 @@
 {
-  "client_id": "",
-  "redirect_uri": "",
-  "authorities": [],
-  "authorization_user_agent": "DEFAULT",
+  "client_id": "eaa6bf7e-6f24-4f12-9633-5ec7c1185759",
+  "redirect_uri": "msauth://com.techspecialist.worktrack/imnM6I8sTShm14H1S3r5pi8btZYVUyxS4vle_joWKBA",
+  "authorities": [
+    {
+      "type": "AAD",
+      "authority_url": "https://login.microsoftonline.com/a813ca98-e413-42d1-b73f-9fdc7a2ab8d4",
+      "audience": {
+        "type": "AzureADMyOrg",
+        "tenant_id": "a813ca98-e413-42d1-b73f-9fdc7a2ab8d4"
+      },
+      "default": true
+    }
+  ],
+  "authorization_user_agent": "BROWSER",
   "multiple_clouds_supported": false,
   "broker_redirect_uri_registered": false,
   "account_mode": "SINGLE"

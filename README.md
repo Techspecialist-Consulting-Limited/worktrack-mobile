@@ -21,6 +21,9 @@ cp env.example.json env.json   # fill in values (gitignored)
 flutter run --dart-define-from-file=env.json
 ```
 
+In VS Code, select **WorkTrack (env.json)** from Run and Debug to pass the same
+configuration when launching the app.
+
 Android emulator: `WT_API_BASE_URL` defaults to `http://10.0.2.2:3000`
 (emulator loopback → host machine). Physical device: use your machine's LAN IP.
 
@@ -76,6 +79,23 @@ Auth flow: splash → silent restore (MSAL cache) → `GET /api/mobile/session`
 → single membership auto-selects, multiple → role picker → `selectRole`
 validates via `GET /api/worklog/state?scope=me` → home. Role is sent as
 `x-worktrack-role` and re-validated server-side on every call.
+
+If the cached account is rejected (HTTP 401 → "Your session has expired"),
+the welcome screen shows **Clear session & sign in again**. That action wipes
+the MSAL token cache, stored role/account id and in-memory token, then forces
+a fresh interactive Microsoft sign-in (`Prompt.login`).
+
+MSAL Android can also drift into `current_account_mismatch` ("The signed in
+account does not match with the provided account.") when its persisted
+current account no longer matches the cached/broker account. The app detects
+that error and performs the same clean re-authentication automatically
+(once per app session), then falls back to the button if it happens again.
+
+The root cause was in `msal_auth` 3.5.3: its silent-token path passed a stale
+synchronous `currentAccount` into `forAccount(...)`. A local patched copy in
+`packages/msal_auth` (wired via `dependency_overrides`) now reconciles the
+account with `getCurrentAccountAsync` before silent acquisition. See
+`packages/msal_auth/README.patch.md`.
 
 ## Status
 

@@ -52,3 +52,7 @@ env.json
 *.keystore
 *.jks
 key.properties
+
+# Local debugging artifacts (emulator screenshots / UI dumps)
+/*.png
+/ui_dump.xml

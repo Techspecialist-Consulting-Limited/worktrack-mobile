@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../core/network/api_client.dart';
+import '../proto/models.dart' show ComplaintFile;
 import 'models.dart';
 
 /// Backend mobile endpoints. All requests go through ApiClient, which
@@ -75,8 +76,152 @@ class SessionService {
     return body;
   }
 
-  /// POST /api/mobile/invitations/redeem — prepared for the future
-  /// invitation flow; not invoked by the current UI.
+  /* ---------------- worklog actions ---------------- */
+
+  /// POST /api/worklog/action — dispatches a mutation and returns the
+  /// response body ({ ok, message?, db? } where db is the fresh snapshot).
+  Future<Map<String, dynamic>> postAction(
+    String action,
+    Map<String, dynamic> payload,
+  ) async {
+    try {
+      final res = await _client.post<Map<String, dynamic>>(
+        '/api/worklog/action',
+        data: {'action': action, 'payload': payload},
+      );
+      final body = res.data ?? const <String, dynamic>{};
+      return body;
+    } on DioException catch (e) {
+      throw _mapDio(e);
+    }
+  }
+
+  /// Uploads a pending work-entry evidence file.
+  /// Returns the new attachment id, or throws [ApiException].
+  Future<String> uploadWorkEntryFile(String path, String fileName) async {
+    final form = FormData.fromMap({
+      'file': await MultipartFile.fromFile(path, filename: fileName),
+    });
+    try {
+      final res = await _client.postMultipart<Map<String, dynamic>>(
+        '/api/worklog/attachments',
+        form,
+      );
+      final body = res.data ?? const <String, dynamic>{};
+      final att = body['attachment'] as Map<String, dynamic>?;
+      final id = att?['id'] as String?;
+      if (body['ok'] != true || id == null) {
+        throw ApiException(body['message'] as String? ?? 'Upload failed.', res.statusCode);
+      }
+      return id;
+    } on DioException catch (e) {
+      throw _mapDio(e);
+    }
+  }
+
+  /* ---------------- complaints ---------------- */
+
+  /// GET /api/complaints — staff receive only their own records.
+  Future<List<Map<String, dynamic>>> fetchComplaints() async {
+    try {
+      final res = await _client.get<Map<String, dynamic>>('/api/complaints');
+      final body = res.data ?? const <String, dynamic>{};
+      final list = body['complaints'] as List? ?? const [];
+      return list.whereType<Map>().map((m) => m.cast<String, dynamic>()).toList();
+    } on DioException catch (e) {
+      throw _mapDio(e);
+    }
+  }
+
+  /// POST /api/complaints — multipart when files are attached.
+  Future<Map<String, dynamic>> createComplaint({
+    required String subject,
+    required String description,
+    List<ComplaintFile> files = const [],
+  }) async {
+    final withPaths = files.where((f) => f.path != null).toList();
+    try {
+      if (withPaths.isEmpty) {
+        final res = await _client.post<Map<String, dynamic>>(
+          '/api/complaints',
+          data: {'subject': subject, 'description': description},
+        );
+        return res.data ?? const <String, dynamic>{};
+      }
+      final form = FormData.fromMap({
+        'subject': subject,
+        'description': description,
+        'files': [
+          for (final f in withPaths)
+            await MultipartFile.fromFile(f.path!, filename: f.fileName),
+        ],
+      });
+      final res = await _client.postMultipart<Map<String, dynamic>>('/api/complaints', form);
+      return res.data ?? const <String, dynamic>{};
+    } on DioException catch (e) {
+      throw _mapDio(e);
+    }
+  }
+
+  /// Uploads a pending complaint attachment (reply flow). Returns its id.
+  Future<String> uploadComplaintFile(String complaintId, String path, String fileName) async {
+    final form = FormData.fromMap({
+      'complaintId': complaintId,
+      'file': await MultipartFile.fromFile(path, filename: fileName),
+    });
+    try {
+      final res = await _client.postMultipart<Map<String, dynamic>>(
+        '/api/complaints/attachments',
+        form,
+      );
+      final body = res.data ?? const <String, dynamic>{};
+      final att = body['attachment'] as Map<String, dynamic>?;
+      final id = att?['id'] as String?;
+      if (body['ok'] != true || id == null) {
+        throw ApiException(body['message'] as String? ?? 'Upload failed.', res.statusCode);
+      }
+      return id;
+    } on DioException catch (e) {
+      throw _mapDio(e);
+    }
+  }
+
+  /// POST /api/complaints/[id] — staff reply or mark-read.
+  Future<Map<String, dynamic>> complaintAction(
+    String complaintId, {
+    String type = 'reply',
+    String? body,
+    List<String> attachmentIds = const [],
+  }) async {
+    try {
+      final res = await _client.post<Map<String, dynamic>>(
+        '/api/complaints/$complaintId',
+        data: {
+          'type': type,
+          'body': ?body,
+          if (attachmentIds.isNotEmpty) 'attachmentIds': attachmentIds,
+        },
+      );
+      return res.data ?? const <String, dynamic>{};
+    } on DioException catch (e) {
+      throw _mapDio(e);
+    }
+  }
+
+  /// GET /api/mobile/onboarding — active client organisations for the
+  /// self-service client-site picker (no membership required).
+  Future<List<Map<String, dynamic>>> fetchClientOrganisations() async {
+    try {
+      final res = await _client.get<Map<String, dynamic>>('/api/mobile/onboarding');
+      final body = res.data ?? const <String, dynamic>{};
+      final list = body['clientOrganisations'] as List? ?? const [];
+      return list.whereType<Map>().map((m) => m.cast<String, dynamic>()).toList();
+    } on DioException catch (e) {
+      throw _mapDio(e);
+    }
+  }
+
+  /// Redeems a prepared invitation (kept for the invitation flow).
   Future<Map<String, dynamic>> redeemInvitation(
     String invitationToken, {
     String? graphAccessToken,

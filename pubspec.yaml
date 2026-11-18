@@ -40,6 +40,7 @@ dependencies:
   dio: ^5.11.1
   flutter_secure_storage: ^11.2.0
   msal_auth: ^3.5.3
+  file_picker: ^13.4.0
 
 dev_dependencies:
   flutter_test:
@@ -51,6 +52,13 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+
+# Local patch: msal_auth 3.5.3 uses a stale synchronous `currentAccount` for
+# silent token acquisition on Android, which causes the recurring
+# `current_account_mismatch` error. See packages/msal_auth/README.patch.md.
+dependency_overrides:
+  msal_auth:
+    path: packages/msal_auth
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -65,6 +73,7 @@ flutter:
 
   assets:
     - assets/msal_config.json
+    - assets/images/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

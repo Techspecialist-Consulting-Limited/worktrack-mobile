@@ -44,12 +44,18 @@ class MsalService {
   }
 
   /// Interactive sign-in — always shows the account picker / consent UI.
-  Future<AuthenticationResult> signIn() async {
+  ///
+  /// Pass [Prompt.login] to force the identity provider to ask for
+  /// credentials again (used by the "sign in again" flow after a stale
+  /// session / HTTP 401).
+  Future<AuthenticationResult> signIn({
+    Prompt prompt = Prompt.selectAccount,
+  }) async {
     final pca = await _ensureInitialized();
     return pca.acquireToken(
       scopes: [AppConfig.worktrackScope],
       authority: AppConfig.entraAuthority,
-      prompt: Prompt.selectAccount,
+      prompt: prompt,
     );
   }
 
